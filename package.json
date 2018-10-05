@@ -1,0 +1,16 @@
+{
+  "name": "seckp256k1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "big-integer": "^1.6.36",
+    "cashlib": "0.0.6"
+    "stringfu": "0.0.4"
+  }
+}
