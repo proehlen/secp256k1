@@ -1,8 +1,11 @@
+/**
+ * Check a number of results of this package's toPubKey against node crypto package
+ */
+
 const bigInt = require('big-integer');
 const crypto = require('crypto'); // To check results
 const stringfu = require('stringfu');
-const toPubKey = require('./index');
-
+const toPubKey = require('./toPubKey');
 
 /**
  * output: 'none' | 'standard' | 'verbose'
@@ -24,7 +27,7 @@ function check(from, to, output = 'standard') {
     const privKey = new bigInt(i);
   
     // Get public key using our code
-    const pubKey = toPubKey(privKey).toHex();
+    const pubKey = toPubKey(privKey).toHex(false);
 
     // Generate key using node crypto
     const ecdh = crypto.createECDH('secp256k1');
@@ -57,8 +60,8 @@ function check(from, to, output = 'standard') {
   return results;
 }
 
-const from = 100100;
-const to = 101000;
+const from = 100001;
+const to = 200000;
 console.log(`Checking private keys from ${from} to ${to}`)
 
 const stats = check(from, to, 'standard');
