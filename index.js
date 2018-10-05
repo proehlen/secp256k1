@@ -21,32 +21,36 @@ class Point {
   }
 }
 
-const xG = bigInt('79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798', 16);
-const yG = bigInt('483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8', 16);
-const a = bigInt('0000000000000000000000000000000000000000000000000000000000000000', 16);
-const b = bigInt('0000000000000000000000000000000000000000000000000000000000000007', 16);
-const p = bigInt('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F', 16);
-const n = bigInt('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16);
-const h = bigInt('0000000000000000000000000000000000000000000000000000000000000001', 16);
-
-const genPoint = new Point(xG, yG);
+// secp256k1 constants.  Unlike for other curves, we only need 3 here.  They are:
+// field.  aka 'p' - integer specifying the finite field
+// basePoint. aka 'G = (xG, yG)'
+// prime. aka 'n' - a prime which is the order of basePoint/G
+const field = bigInt('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F', 16);
+const basePoint = new Point(
+  bigInt('79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798', 16),
+  bigInt('483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8', 16),
+);
+const prime = bigInt('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16);
 
 function ecAdd(point) {
-  const lamda = genPoint.y
+  const lamda = basePoint.y
     .subtract(point.y)
     .multiply(
-      genPoint.x.subtract(point.x).modInv(p)
+      basePoint.x.subtract(point.x).modInv(field)
     )
-    .mod(p);
+    .mod(field);
   const xR = lamda
     .pow(2)
     .subtract(point.x)
-    .subtract(genPoint.x)
-    .mod(p);
-  const yR = lamda
+    .subtract(basePoint.x)
+    .mod(field);
+  let yR = lamda
     .multiply(point.x.subtract(xR))
     .subtract(point.y)
-    .mod(p);
+    .mod(field);
+  if (yR.isNegative()) {
+    yR = yR.add(field);
+  }
   return new Point(xR, yR);
 }
 
@@ -55,26 +59,31 @@ function ecDouble(point) {
     .pow(2)
     .multiply(3)
     .multiply(
-      point.y.multiply(2).modInv(p)
-    ).mod(p);
+      point.y.multiply(2).modInv(field)
+    ).mod(field);
   const xR = lamda
     .pow(2)
     .subtract(point.x.multiply(2))
-    .mod(p);
-  const yR = lamda
+    .mod(field);
+  let yR = lamda
     .multiply(point.x.subtract(xR))
     .subtract(point.y)
-    .mod(p);
+    .mod(field);
+  
+  if (yR.isNegative()) {
+    yR = yR.add(field);
+  }
+  
   return new Point(xR, yR);
 }
 
 function toPubKey(privKey) {
-  if (privKey === 0 || privKey >= n) {
+  if (privKey === 0 || privKey >= prime) {
     throw new Error('Invalid private key');
   }
 
   const keyBits = privKey.toString(2).split('');
-  let q = new Point(genPoint.x, genPoint.y);
+  let q = new Point(basePoint.x, basePoint.y);
   for (let i = 1; i <  keyBits.length; i++) {
     q = ecDouble(q);
     if (keyBits[i] === '1') {
@@ -137,7 +146,11 @@ function check(from, to, output = 'standard') {
   return results;
 }
 
-const stats = check(1, 1000, 'none');
+const from = 100100;
+const to = 101000;
+console.log(`Checking private keys from ${from} to ${to}`)
+
+const stats = check(from, to, 'standard');
 console.log(`Correct: ${stats.correct}, incorrect: ${stats.incorrect}`);
 console.log(`X correct: ${stats.x.correct}, incorrect: ${stats.x.incorrect}`);
 console.log(`Y correct: ${stats.y.correct}, incorrect: ${stats.y.incorrect}`);

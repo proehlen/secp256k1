@@ -1,5 +1,5 @@
 {
-  "name": "seckp256k1",
+  "name": "secp256k1",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "big-integer": "^1.6.36",
-    "cashlib": "0.0.6"
     "stringfu": "0.0.4"
   }
 }
